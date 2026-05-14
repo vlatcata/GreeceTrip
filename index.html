@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greece Trip 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        /* ─── Reset & Tokens ─────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --blue:         #1B4F72;
+            --blue-mid:     #2E86AB;
+            --coral:        #E8845A;
+            --coral-dark:   #d4724a;
+            --sand:         #F7F5F0;
+            --sand-dark:    #EDE9E1;
+            --white:        #FFFFFF;
+            --text:         #18181B;
+            --text-soft:    #3F3F46;
+            --muted:        #71717A;
+            --border:       #E4E4E7;
+            --shadow-sm:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+            --shadow:       0 4px 12px rgba(0,0,0,0.09), 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-lg:    0 10px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
+            --radius-lg:    18px;
+            --radius:       12px;
+            --radius-sm:    8px;
+            --radius-xs:    6px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--sand);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ─── Typography ─────────────────────────────────── */
+        .serif { font-family: 'Playfair Display', Georgia, serif; }
+
+        /* ─── Hero ───────────────────────────────────────── */
+        .hero {
+            position: relative;
+            height: 540px;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .hero__bg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 60%;
+            transition: transform 0.1s linear;
+        }
+
+        .hero__overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to top,
+                rgba(15, 40, 60, 0.88) 0%,
+                rgba(15, 40, 60, 0.35) 50%,
+                rgba(15, 40, 60, 0.10) 100%
+            );
+        }
+
+        .hero__content {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            padding: 2.5rem clamp(1.5rem, 5vw, 3.5rem);
+            color: white;
+        }
+
+        .hero__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 0.6rem;
+        }
+
+        .hero__title {
+            font-size: clamp(2rem, 5.5vw, 3.75rem);
+            font-weight: 700;
+            line-height: 1.12;
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .hero__meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            font-size: 0.925rem;
+            opacity: 0.9;
+            margin-bottom: 1.75rem;
+        }
+
+        .hero__meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* Countdown */
+        .countdown {
+            display: inline-flex;
+            gap: 0.25rem;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: var(--radius);
+            padding: 0.7rem 1.1rem;
+            gap: 1rem;
+        }
+
+        .countdown__unit { text-align: center; }
+
+        .countdown__value {
+            display: block;
+            font-size: 1.55rem;
+            font-weight: 700;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .countdown__label {
+            display: block;
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        /* ─── Weather Section ─────────────────────────────── */
+        .weather-strip {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .weather-strip__inner {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0.75rem clamp(1.5rem, 5vw, 2.5rem);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .weather-strip__label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: var(--muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .wfc-header {
+            display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;
+        }
+        .wfc-loc-nav { display: flex; align-items: center; gap: 0.25rem; }
+        .wfc-loc-name {
+            font-size: 0.82rem; font-weight: 600; color: var(--text);
+            min-width: 90px; text-align: center;
+        }
+        .wfc-nav-btn {
+            background: none; border: 1px solid var(--border); border-radius: 50%;
+            width: 22px; height: 22px; cursor: pointer; font-size: 0.9rem; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--muted); transition: all 0.15s; padding: 0; flex-shrink: 0;
+        }
+        .wfc-nav-btn:hover { background: var(--sand); color: var(--text); border-color: var(--muted); }
+        .wfc-nav-btn:disabled { opacity: 0.3; cursor: default; }
+        .wfc-dots { display: flex; gap: 4px; align-items: center; }
+        .wfc-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--border); transition: background 0.2s;
+        }
+        .wfc-dot.active { background: var(--coral); }
+
+        /* weather forecast component */
+        .wfc { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+
+        .wfc-current {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .wfc-curr-icon { font-size: 2.2rem; line-height: 1; }
+        .wfc-curr-info { display: flex; flex-direction: column; gap: 0.1rem; }
+        .wfc-curr-temp { font-size: 1.4rem; font-weight: 700; color: var(--text); line-height: 1; }
+        .wfc-curr-desc { font-size: 0.82rem; color: var(--muted); }
+        .wfc-curr-meta { font-size: 0.75rem; color: var(--muted); margin-top: 0.15rem; }
+
+        .wfc-divider {
+            width: 1px; height: 48px;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .wfc-forecast { display: flex; gap: 0.5rem; }
+        .wfc-day {
+            display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+            padding: 0.45rem 0.7rem;
+            background: var(--sand);
+            border-radius: var(--radius-sm);
+            min-width: 58px;
+        }
+        .wfc-dayname { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+        .wfc-day-icon { font-size: 1.25rem; }
+        .wfc-day-desc { font-size: 0.65rem; color: var(--muted); text-align: center; }
+        .wfc-range { font-size: 0.75rem; color: var(--text); font-weight: 600; white-space: nowrap; }
+
+        .wfc-error { font-size: 0.85rem; color: var(--muted); }
+        .wfc-loading { font-size: 0.85rem; color: var(--muted); }
+
+        /* ─── Sticky Toolbar ─────────────────────────────── */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: rgba(247, 245, 240, 0.94);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .toolbar__inner {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0.7rem clamp(1.5rem, 5vw, 2.5rem);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .toolbar__count {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--muted);
+        }
+
+        .compare-trigger {
+            display: none;
+            align-items: center;
+            gap: 0.45rem;
+            background: var(--coral);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 1.1rem;
+            font-size: 0.855rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+            box-shadow: 0 2px 6px rgba(232, 132, 90, 0.35);
+        }
+
+        .compare-trigger:hover {
+            background: var(--coral-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(232, 132, 90, 0.45);
+        }
+
+        .compare-trigger.is-visible { display: flex; }
+
+        /* ─── Main Layout ────────────────────────────────── */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 clamp(1.5rem, 5vw, 2.5rem);
+        }
+
+        .section { padding: 2.75rem 0; }
+
+        .section__header { margin-bottom: 1.75rem; }
+
+        .section__title {
+            font-size: clamp(1.4rem, 3vw, 1.85rem);
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.01em;
+        }
+
+        .section__subtitle {
+            margin-top: 0.3rem;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        /* ─── Cards Grid ─────────────────────────────────── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.75rem;
+        }
+
+        /* ─── Property Card ──────────────────────────────── */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        /* Card image */
+        .card__img-wrap {
+            position: relative;
+            height: 215px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: var(--sand-dark);
+        }
+
+        .card__img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.45s ease;
+            display: block;
+        }
+
+        .card:hover .card__img { transform: scale(1.05); }
+
+        /* Fav / vote button */
+        .card__fav {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            z-index: 2;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: var(--shadow-sm);
+            overflow: visible;
+        }
+        .card__fav:hover { transform: scale(1.18); }
+        .card__fav.has-votes { background: #fff0eb; }
+
+        /* Vote count badge */
+        .card__vote-count {
+            position: absolute;
+            bottom: -5px; right: -5px;
+            background: var(--coral); color: #fff;
+            border-radius: 50%;
+            width: 17px; height: 17px;
+            font-size: 0.62rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1; border: 1.5px solid #fff;
+            pointer-events: none;
+        }
+
+        /* Compare checkbox — custom styled */
+        .card__compare-wrap {
+            position: absolute;
+            top: 10px; left: 10px;
+            z-index: 3; line-height: 0;
+        }
+        .card__compare-wrap input[type="checkbox"] {
+            appearance: none; -webkit-appearance: none;
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.9);
+            border-radius: 5px;
+            background: rgba(0,0,0,0.28);
+            cursor: pointer;
+            display: block;
+            position: relative;
+            transition: all 0.15s;
+            backdrop-filter: blur(3px);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+        }
+        .card__compare-wrap input[type="checkbox"]:hover { background: rgba(255,255,255,0.25); }
+        .card__compare-wrap input[type="checkbox"]:checked { background: var(--coral); border-color: var(--coral); }
+        .card__compare-wrap input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff; font-size: 0.72rem; font-weight: 800; line-height: 1;
+        }
+
+        /* Card remove link */
+        .card__remove-btn {
+            background: none; border: none; padding: 0; cursor: pointer;
+            font-size: 0.72rem; color: var(--muted); text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.2rem;
+            transition: color 0.15s; margin-top: auto; align-self: flex-start;
+        }
+        .card__remove-btn:hover { color: #B91C1C; }
+
+        /* Card body */
+        .card__body {
+            padding: 1.2rem 1.25rem 1.35rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 0.8rem;
+        }
+
+        .card__title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.3;
+            color: var(--text);
+        }
+
+        .card__title a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.18s;
+        }
+
+        .card__title a:hover { color: var(--blue-mid); }
+
+        /* Stats row */
+        .card__stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem 1.1rem;
+            font-size: 0.82rem;
+            color: var(--muted);
+        }
+
+        .card__stat {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+        }
+
+        /* Price */
+        .card__price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+        }
+
+        .card__price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--blue);
+            letter-spacing: -0.02em;
+        }
+
+        .card__price-label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 400;
+        }
+
+        /* Amenity badges */
+        .card__amenities {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 0.22rem 0.6rem;
+            border-radius: 999px;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .badge--pool      { background: #DBEAFE; color: #1D4ED8; }
+        .badge--ac        { background: #D1FAE5; color: #065F46; }
+        .badge--parking   { background: #FEF3C7; color: #92400E; }
+        .badge--sea-view  { background: #E0E7FF; color: #3730A3; }
+        .badge--balcony   { background: #FCE7F3; color: #9D174D; }
+        .badge--kitchen   { background: #FEF9C3; color: #713F12; }
+        .badge--wifi      { background: #ECFDF5; color: #065F46; }
+        .badge--bbq       { background: #FFEDD5; color: #9A3412; }
+        .badge--terrace   { background: #F0FDF4; color: #166534; }
+        .badge--default   { background: #F4F4F5; color: #52525B; }
+
+        /* Rating pill on card image */
+        .card__rating {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.22rem 0.6rem;
+            border-radius: 999px;
+            backdrop-filter: blur(4px);
+            z-index: 2;
+            line-height: 1.4;
+        }
+        .card__rating--high { background: rgba(209,250,229,0.92); color: #065F46; }
+        .card__rating--mid  { background: rgba(254,243,199,0.92); color: #92400E; }
+        .card__rating--low  { background: rgba(254,226,226,0.92); color: #991B1B; }
+        .card__rating-count { font-weight: 400; opacity: 0.8; }
+
+        /* Per-person price */
+        .card__price-pp {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-top: -0.5rem;
+        }
+
+        /* Warning strip */
+        .card__warning {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #B91C1C;
+            border-radius: var(--radius-xs);
+            padding: 0.4rem 0.65rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        /* Notes */
+        .card__notes {
+            border-left: 3px solid var(--coral);
+            padding: 0.55rem 0.8rem;
+            border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+            background: #FEFAF8;
+            font-size: 0.815rem;
+            color: var(--text-soft);
+            font-style: italic;
+            line-height: 1.5;
+            margin-top: auto;
+        }
+
+        /* ─── Map Section ────────────────────────────────── */
+        .map-section {
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        #map {
+            height: 460px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        /* Leaflet popup style override */
+        .leaflet-popup-content-wrapper {
+            border-radius: var(--radius-sm) !important;
+            box-shadow: var(--shadow-lg) !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        .leaflet-popup-content { margin: 10px 14px !important; line-height: 1.5 !important; }
+
+        /* ─── Compare Modal ──────────────────────────────── */
+        .compare-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 20, 30, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 2rem 1rem;
+        }
+
+        .compare-overlay.is-open {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .compare-modal {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 1050px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+            overflow: hidden;
+            animation: modal-in 0.22s ease;
+        }
+
+        @keyframes modal-in {
+            from { opacity: 0; transform: translateY(14px) scale(0.98); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        .compare-modal__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .compare-modal__header h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .compare-modal__close {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--muted);
+            padding: 0.2rem 0.4rem;
+            border-radius: var(--radius-xs);
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .compare-modal__close:hover { background: var(--sand); color: var(--text); }
+
+        .compare-modal__body { overflow-x: auto; }
+
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .compare-table th,
+        .compare-table td {
+            padding: 0.7rem 1rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .compare-table th {
+            background: var(--sand);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            width: 130px;
+            white-space: nowrap;
+        }
+
+        .compare-table td { min-width: 210px; }
+
+        .compare-table tr:last-child th,
+        .compare-table tr:last-child td { border-bottom: none; }
+
+        .compare__img {
+            width: 100%;
+            height: 135px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .compare__name {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .compare__name a { color: var(--blue); text-decoration: none; }
+        .compare__name a:hover { text-decoration: underline; }
+
+        /* ─── Toolbar Add Button ─────────────────────────── */
+        .btn-add-prop {
+            display: flex; align-items: center; gap: 0.4rem;
+            padding: 0.45rem 0.9rem;
+            background: var(--coral); color: #fff;
+            border: none; border-radius: var(--radius-sm);
+            font-size: 0.82rem; font-weight: 600; cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .btn-add-prop:hover { background: #d4714d; }
+        .btn-add-prop:active { transform: scale(0.97); }
+
+        /* (card delete button moved to card body — see .card__remove-btn) */
+
+        /* ─── Add Property Modal ─────────────────────────── */
+        .prop-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 500;
+            align-items: flex-start; justify-content: center;
+            padding: 2rem 1rem; overflow-y: auto;
+        }
+        .prop-overlay.is-open { display: flex; }
+        .prop-modal {
+            background: var(--white); border-radius: var(--radius);
+            width: 100%; max-width: 560px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            padding: 2rem;
+            margin: auto;
+        }
+        .prop-modal__header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .prop-modal__title { font-size: 1.2rem; font-weight: 700; }
+        .prop-modal__close {
+            background: none; border: none; font-size: 1.4rem; cursor: pointer;
+            color: var(--muted); width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: background 0.15s;
+        }
+        .prop-modal__close:hover { background: var(--sand); color: var(--text); }
+
+        .pf-row { margin-bottom: 1rem; }
+        .pf-row label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .pf-input {
+            width: 100%; box-sizing: border-box;
+            padding: 0.5rem 0.7rem; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem;
+            font-family: inherit; background: var(--bg);
+            transition: border-color 0.15s;
+        }
+        .pf-input:focus { outline: none; border-color: var(--coral); }
+        .pf-hint { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+        .pf-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .pf-btn-cancel {
+            padding: 0.5rem 1.1rem; border: 1px solid var(--border); background: none;
+            border-radius: var(--radius-sm); font-size: 0.88rem; cursor: pointer;
+            font-family: inherit; transition: background 0.15s;
+        }
+        .pf-btn-cancel:hover { background: var(--sand); }
+        .pf-btn-submit {
+            padding: 0.5rem 1.3rem; background: var(--coral); color: #fff;
+            border: none; border-radius: var(--radius-sm); font-size: 0.88rem;
+            font-weight: 600; cursor: pointer; font-family: inherit;
+            transition: background 0.15s;
+        }
+        .pf-btn-submit:hover { background: #d4714d; }
+
+        /* ─── Footer ─────────────────────────────────────── */
+        footer {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            font-size: 0.8rem;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+        }
+
+        /* ─── Responsive ─────────────────────────────────── */
+        @media (max-width: 768px) {
+            .hero            { height: 460px; }
+            .hero__content   { padding: 2rem 1.5rem; }
+            .hero__title     { font-size: 2rem; }
+            .countdown__value { font-size: 1.25rem; }
+            .cards-grid      { grid-template-columns: 1fr; }
+            #map             { height: 320px; }
+            .compare-overlay { padding: 1rem 0.5rem; }
+        }
+
+        @media (max-width: 480px) {
+            .countdown { gap: 0.6rem; padding: 0.6rem 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     HERO
+══════════════════════════════════════════════════════════ -->
+<header class="hero">
+    <img id="js-hero-bg" class="hero__bg" src="" alt="">
+    <div class="hero__overlay"></div>
+    <div class="hero__content">
+        <p class="hero__eyebrow serif" id="js-hero-eyebrow">Summer 2026 · Group of 5</p>
+        <h1 class="hero__title serif" id="js-hero-title">Trip to Greece</h1>
+        <div class="hero__meta">
+            <span class="hero__meta-item">📍 <span id="js-hero-dest">–</span></span>
+            <span class="hero__meta-item">📅 <span id="js-hero-dates">–</span></span>
+            <span class="hero__meta-item">👥 <span id="js-hero-group">–</span></span>
+        </div>
+        <div class="countdown" id="js-countdown">
+            <div class="countdown__unit">
+                <span class="countdown__value" id="cd-days">--</span>
+                <span class="countdown__label">days</span>
+            </div>
+            <div class="countdown__unit">
+                <span class="countdown__value" id="cd-hours">--</span>
+                <span class="countdown__label">hrs</span>
+            </div>
+            <div class="countdown__unit">
+                <span class="countdown__value" id="cd-mins">--</span>
+                <span class="countdown__label">min</span>
+            </div>
+            <div class="countdown__unit">
+                <span class="countdown__value" id="cd-secs">--</span>
+                <span class="countdown__label">sec</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     WEATHER STRIP
+══════════════════════════════════════════════════════════ -->
+<div class="weather-strip">
+    <div class="weather-strip__inner">
+        <div class="wfc-header">
+            <span class="weather-strip__label">⛅ Weather</span>
+            <div class="wfc-loc-nav">
+                <button class="wfc-nav-btn" id="js-wfc-prev" onclick="weatherNav(-1)" aria-label="Previous">&#8249;</button>
+                <span class="wfc-loc-name" id="js-weather-dest">–</span>
+                <button class="wfc-nav-btn" id="js-wfc-next" onclick="weatherNav(1)" aria-label="Next">&#8250;</button>
+            </div>
+            <div class="wfc-dots" id="js-wfc-dots"></div>
+        </div>
+        <div id="js-weather-value" class="wfc-loading">Loading…</div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     STICKY TOOLBAR
+══════════════════════════════════════════════════════════ -->
+<div class="toolbar">
+    <div class="toolbar__inner">
+        <span class="toolbar__count" id="js-toolbar-count"></span>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+            <button class="btn-add-prop" onclick="openAddModal()">＋ Add</button>
+            <button class="compare-trigger" id="js-compare-trigger" onclick="openCompare()">
+                ⚖️ Compare (<span id="js-compare-count">0</span>)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PROPERTIES
+══════════════════════════════════════════════════════════ -->
+<section class="section">
+    <div class="container">
+        <div class="section__header">
+            <h2 class="section__title serif">Accommodation Options</h2>
+            <p class="section__subtitle">Click a card title to open the listing. Use ⊡ to compare, ♡ to save a favourite.</p>
+        </div>
+        <div class="cards-grid" id="js-cards-grid"></div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAP
+══════════════════════════════════════════════════════════ -->
+<section class="section map-section">
+    <div class="container">
+        <div class="section__header">
+            <h2 class="section__title serif">Property Locations</h2>
+            <p class="section__subtitle">Click a pin for details and a link to the listing.</p>
+        </div>
+        <div id="map"></div>
+    </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════
+     COMPARE MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="compare-overlay" id="js-compare-overlay" onclick="handleOverlayClick(event)">
+    <div class="compare-modal">
+        <div class="compare-modal__header">
+            <h2>Side-by-side Comparison</h2>
+            <button class="compare-modal__close" onclick="closeCompare()" aria-label="Close">×</button>
+        </div>
+        <div class="compare-modal__body" id="js-compare-body"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ADD PROPERTY MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="prop-overlay" id="js-add-overlay" onclick="handleAddOverlayClick(event)" role="dialog" aria-modal="true">
+    <div class="prop-modal">
+        <div class="prop-modal__header">
+            <h2 class="prop-modal__title serif">Add Accommodation</h2>
+            <button class="prop-modal__close" onclick="closeAddModal()" aria-label="Close">&times;</button>
+        </div>
+        <form id="js-add-form" onsubmit="submitAddProperty(event)">
+            <div class="pf-row">
+                <label for="pf-url">Booking URL *</label>
+                <input class="pf-input" type="url" id="pf-url" required placeholder="https://www.booking.com/hotel/gr/...">
+            </div>
+            <div class="pf-row">
+                <label for="pf-image">Thumbnail URL *</label>
+                <input class="pf-input" type="url" id="pf-image" required placeholder="https://cf.bstatic.com/xdata/images/hotel/...">
+                <p class="pf-hint">Right-click the photo on Booking.com → Copy image address</p>
+            </div>
+            <div class="pf-row">
+                <label for="pf-raw">Paste listing info *</label>
+                <textarea class="pf-input" id="pf-raw" required rows="9"
+                    placeholder="Select all text on the Booking.com listing page and paste it here. We'll automatically extract the name, price, rating, beach distance, bedrooms, amenities, and more."
+                    style="resize:vertical"></textarea>
+                <p class="pf-hint">Tip: press Ctrl+A on the listing page, then Ctrl+C, then paste here</p>
+            </div>
+            <div class="pf-actions">
+                <button type="button" class="pf-btn-cancel" onclick="closeAddModal()">Cancel</button>
+                <button type="submit" class="pf-btn-submit">Extract &amp; Add →</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════════════ -->
+<footer>
+    <p id="js-footer-text">Built for the squad</p>
+</footer>
+
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// TRIP CONFIGURATION
+// Edit this object to change destination, dates, hero image.
+// ═══════════════════════════════════════════════════════════
+const TRIP = {
+    title:       "Kassandra, Halkidiki",
+    destination: "Pefkochori",           // used for wttr.in weather lookup
+    dates: {
+        start: "2026-07-10",            // YYYY-MM-DD
+        end:   "2026-07-19",
+    },
+    group:     5,
+    heroImage: "https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?w=1600&auto=format&fit=crop&q=80",
+    map: {
+        center: [40.025, 23.33],
+        zoom:   10,
+    },
+};
+
+// ═══════════════════════════════════════════════════════════
+// PROPERTY DATA
+// Add / edit entries here. All fields optional except
+// id, name, url, image, price, priceLabel, coords.
+// ═══════════════════════════════════════════════════════════
+const PROPERTIES = [
+    {
+        id:            1,
+        name:          "Kriopigi Apartments",
+        url:           "https://www.booking.com/hotel/gr/apartments-kriopighi.en-gb.html",
+        image:         "https://cf.bstatic.com/xdata/images/hotel/square600/314230495.webp?k=64e4077cd78f6d31347b09536e74ee67e20af450b5b089fc0b462f6859b7d2f3&o=",
+        price:         1674,
+        priceLabel:    "total (9 nights)",
+        pricePerPerson: 335,
+        beachDistance: "1.3 km",
+        bedrooms:      3,
+        sofaBeds:      1,
+        maxSleeps:     6,
+        size:          "120 m²",
+        rating:        9.5,
+        reviewCount:   36,
+        coords:        [40.003, 23.394],
+        location:      "Kriopigi",
+        amenities:     ["ac", "balcony", "sea view", "kitchen", "wifi", "parking", "bbq", "terrace"],
+        notes:         "3 bedrooms = most sleeping space (120 m²). Property is on the coast but the nearest swim beach is a 15-min walk (1.3 km). Good reviews mention BBQ, host very helpful. ⚠️ Reviews note AC is only in the living room, not the bedrooms.",
+    },
+    {
+        id:            2,
+        name:          "Jella's Sunny Apartment",
+        url:           "https://www.booking.com/hotel/gr/jellas-sunny-apartment.en-gb.html",
+        image:         "https://cf.bstatic.com/xdata/images/hotel/square600/663001561.webp?k=b7b31c0da26ce138a458348abe3faacd32ec6c2b9431627bf15b289116f69403&o=",
+        price:         1545,
+        priceLabel:    "total (9 nights, non-refundable)",
+        pricePerPerson: 309,
+        beachDistance: "20 m",
+        bedrooms:      2,
+        sofaBeds:      1,
+        maxSleeps:     6,
+        size:          "66 m²",
+        rating:        7.0,
+        reviewCount:   3,
+        coords:        [39.977, 23.328],
+        location:      "Nea Skioni",
+        amenities:     ["ac", "balcony", "sea view", "kitchen", "wifi", "bbq"],
+        notes:         "Cheapest option and literally 20 m from the beach. Concern: only 3 reviews with a 7.0 score — not enough data to trust it. Smaller (66 m²). Non-refundable. No parking.",
+    },
+    {
+        id:            3,
+        name:          "Mema's Maisonette",
+        url:           "https://www.booking.com/hotel/gr/memas-maisonette.en-gb.html",
+        image:         "https://cf.bstatic.com/xdata/images/hotel/square600/865470668.webp?k=be3715c010ad2b2c49ac4a64ffd28482503bd0b55f619b8e9e4b7f54cf344b71&o=",
+        price:         2052,
+        priceLabel:    "total (9 nights)",
+        pricePerPerson: 410,
+        beachDistance: "2.2 km",
+        bedrooms:      2,
+        sofaBeds:      2,
+        maxSleeps:     5,
+        size:          "75 m²",
+        rating:        9.6,
+        reviewCount:   16,
+        coords:        [40.001, 23.382],
+        location:      "Nea Fokea",
+        amenities:     ["ac", "balcony", "kitchen", "wifi", "parking", "bbq", "terrace"],
+        notes:         "Highest-rated (9.6). Two-storey, 75 m², 2 bathrooms, 2 AC units, nice decor. Con: beach (Gilka Nera) is 2.2 km away — you need a car. In Nea Fokea, eastern coast. Priciest option at €410/person.",
+    },
+    {
+        id:            4,
+        name:          "Sea Side Maisonette — Possidi",
+        url:           "https://www.booking.com/hotel/gr/beautiful-sea-side-maisonette-in-posidi-halkidiki.en-gb.html",
+        image:         "https://cf.bstatic.com/xdata/images/hotel/square600/428764297.webp?k=e8bb538b3c5cea7dd35d8147e73f2b632f2103abc5bdaf88f507421295d634d4&o=",
+        price:         2008,
+        priceLabel:    "total (9 nights, free cancellation)",
+        pricePerPerson: 402,
+        beachDistance: "0 m",
+        bedrooms:      2,
+        sofaBeds:      2,
+        maxSleeps:     4,
+        size:          "100 m²",
+        rating:        4.0,
+        reviewCount:   1,
+        coords:        [39.957, 23.284],
+        location:      "Possidi",
+        amenities:     ["ac", "balcony", "sea view", "kitchen", "wifi", "parking", "terrace"],
+        warning:       "Listed max is 4 persons — need to confirm with host for 5th guest before booking.",
+        notes:         "Largest property (100 m²), directly on Possidi West Beach. Only 1 review scoring 4.0 overall (location 10/10) — the poor score is a red flag. Free cancellation. At the southwestern tip of Kassandra.",
+    },
+    {
+        id:            5,
+        name:          "Nea Skioni Apartment",
+        url:           "https://www.booking.com/hotel/gr/nea-skioni-apartment.en-gb.html",
+        image:         "https://cf.bstatic.com/xdata/images/hotel/square600/454764044.webp?k=8e2ab10f289d44e71f182420999af9f32d042d9ec1ec0618294b77995acaecdd&o=",
+        price:         1512,
+        priceLabel:    "total (9 nights, free cancellation)",
+        pricePerPerson: 302,
+        beachDistance: "500 m",
+        bedrooms:      2,
+        sofaBeds:      2,
+        maxSleeps:     5,
+        size:          "55 m²",
+        rating:        9.2,
+        reviewCount:   18,
+        coords:        [39.975, 23.330],
+        location:      "Nea Skioni",
+        amenities:     ["ac", "balcony", "sea view", "kitchen", "wifi", "parking"],
+        notes:         "Best value — cheapest at €302/person with a strong 9.2 rating (18 reviews, location 10/10). 55 m² is the smallest. Beach 500 m / 6-min walk. Free cancellation. Pet friendly.",
+    },
+    {
+        id:            6,
+        name:          "Seafront Apartment Pefkochori",
+        url:           "https://www.booking.com/hotel/gr/seafront-apartment-pefkochori.en-gb.html",
+        image:         "https://cf.bstatic.com/xdata/images/hotel/square600/264276579.webp?k=d5b22e6c45e7f8a427afe81094eca9b2a2d5f189a3c6ae02e25f1b3f73e21e8d&o=",
+        price:         2052,
+        priceLabel:    "total (9 nights, free cancellation)",
+        pricePerPerson: 410,
+        beachDistance: "0 m",
+        bedrooms:      2,
+        sofaBeds:      1,
+        maxSleeps:     5,
+        size:          "60 m²",
+        rating:        9.5,
+        reviewCount:   18,
+        coords:        [40.022, 23.373],
+        location:      "Pefkochori",
+        amenities:     ["ac", "balcony", "sea view", "kitchen", "wifi", "bbq", "terrace"],
+        notes:         "Directly on Pefkohori Beach — reviewers rave about the balcony sea view. 60 m², 9.5 rating. Free cancellation. No parking. Rarely listed on Booking — reserve quickly if interested.",
+    },
+];
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+const VOTES_KEY   = "trip26-votes";
+const CUSTOM_KEY  = "trip26-custom";
+const REMOVED_KEY = "trip26-removed";
+
+let votes            =          JSON.parse(localStorage.getItem(VOTES_KEY)   || "{}");
+let customProperties =          JSON.parse(localStorage.getItem(CUSTOM_KEY)  || "[]");
+let removedIds       = new Set(JSON.parse(localStorage.getItem(REMOVED_KEY) || "[]"));
+let compareSet       = new Set();
+
+function allProperties() {
+    return [
+        ...PROPERTIES.filter(p => !removedIds.has(p.id)),
+        ...customProperties.filter(p => !removedIds.has(p.id)),
+    ];
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════
+function fmt(iso) {
+    return new Date(iso + "T12:00:00").toLocaleDateString("en-GB", {
+        day: "numeric", month: "short", year: "numeric"
+    });
+}
+
+function pad(n) { return String(n).padStart(2, "0"); }
+
+const AMENITY_MAP = {
+    "pool":     { label: "Pool",     cls: "badge--pool"     },
+    "ac":       { label: "A/C",      cls: "badge--ac"       },
+    "parking":  { label: "Parking",  cls: "badge--parking"  },
+    "sea view": { label: "Sea View", cls: "badge--sea-view" },
+    "balcony":  { label: "Balcony",  cls: "badge--balcony"  },
+    "kitchen":  { label: "Kitchen",  cls: "badge--kitchen"  },
+    "wifi":     { label: "WiFi",     cls: "badge--wifi"     },
+    "bbq":      { label: "BBQ",      cls: "badge--bbq"      },
+    "terrace":  { label: "Terrace",  cls: "badge--terrace"  },
+};
+
+function badgeHTML(tag) {
+    const key  = tag.toLowerCase();
+    const meta = AMENITY_MAP[key] || { label: tag, cls: "badge--default" };
+    return `<span class="badge ${meta.cls}">${meta.label}</span>`;
+}
+
+function esc(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+// ═══════════════════════════════════════════════════════════
+// HERO INIT
+// ═══════════════════════════════════════════════════════════
+function initHero() {
+    const year = new Date(TRIP.dates.start).getFullYear();
+    document.getElementById("js-hero-bg").src       = TRIP.heroImage;
+    document.getElementById("js-hero-bg").alt       = TRIP.title;
+    document.getElementById("js-hero-title").textContent   = "Trip to " + TRIP.title;
+    document.getElementById("js-hero-eyebrow").textContent = `Summer ${year} · Group of ${TRIP.group}`;
+    document.getElementById("js-hero-dest").textContent    = TRIP.title;
+    document.getElementById("js-hero-group").textContent   = `${TRIP.group} people`;
+    document.getElementById("js-hero-dates").textContent   = `${fmt(TRIP.dates.start)} – ${fmt(TRIP.dates.end)}`;
+    document.getElementById("js-footer-text").textContent  =
+        `Built for the squad · ${fmt(TRIP.dates.start)} – ${fmt(TRIP.dates.end)}`;
+    document.title = `Trip to ${TRIP.title}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// COUNTDOWN
+// ═══════════════════════════════════════════════════════════
+function tick() {
+    const diff = new Date(TRIP.dates.start + "T00:00:00").getTime() - Date.now();
+    if (diff <= 0) {
+        document.getElementById("js-countdown").innerHTML =
+            `<span style="font-size:1.05rem;font-weight:700">🎉 We're there!</span>`;
+        return;
+    }
+    document.getElementById("cd-days").textContent  = pad(Math.floor(diff / 86400000));
+    document.getElementById("cd-hours").textContent = pad(Math.floor(diff % 86400000 / 3600000));
+    document.getElementById("cd-mins").textContent  = pad(Math.floor(diff % 3600000 / 60000));
+    document.getElementById("cd-secs").textContent  = pad(Math.floor(diff % 60000 / 1000));
+}
+
+// ═══════════════════════════════════════════════════════════
+// WEATHER (wttr.in JSON API — format=j1 always returns JSON)
+// ═══════════════════════════════════════════════════════════
+const WMO = {
+    113:['☀️','Sunny'],        116:['⛅','Partly cloudy'],  119:['☁️','Cloudy'],
+    122:['☁️','Overcast'],     143:['🌫️','Mist'],           176:['🌦️','Patchy rain'],
+    179:['🌨️','Patchy snow'],  182:['🌧️','Patchy sleet'],   185:['🌧️','Patchy freezing drizzle'],
+    200:['⛈️','Thunderstorm'], 227:['🌨️','Blowing snow'],   230:['❄️','Blizzard'],
+    248:['🌫️','Fog'],          260:['🌫️','Freezing fog'],   263:['🌦️','Light drizzle'],
+    266:['🌦️','Drizzle'],      281:['🌧️','Freezing drizzle'],284:['🌧️','Heavy freezing drizzle'],
+    293:['🌦️','Light rain'],   296:['🌦️','Rain'],           299:['🌧️','Mod. rain'],
+    302:['🌧️','Heavy rain'],   305:['🌧️','Heavy rain'],     308:['🌧️','Very heavy rain'],
+    353:['🌦️','Rain showers'], 356:['🌧️','Heavy showers'],  359:['🌧️','Torrential rain'],
+    386:['⛈️','Thunder'],      389:['⛈️','Heavy thunder'],   392:['⛈️','Snow thunder'],
+};
+function wmoGet(code, idx) {
+    const e = WMO[+code]; return e ? e[idx] : (idx === 0 ? '🌡️' : 'N/A');
+}
+
+const weatherCache = {};
+let weatherCities  = [];
+let weatherIdx     = 0;
+
+function refreshWeatherCities() {
+    const seen = new Set();
+    weatherCities = allProperties()
+        .map(p => p.location)
+        .filter(l => l && !seen.has(l) && seen.add(l));
+    if (!weatherCities.length) weatherCities = [TRIP.destination];
+}
+
+function updateWeatherNav() {
+    const city = weatherCities[weatherIdx] || '–';
+    document.getElementById("js-weather-dest").textContent = city;
+    const dots = document.getElementById("js-wfc-dots");
+    if (weatherCities.length > 1) {
+        dots.innerHTML = weatherCities.map((_, i) =>
+            `<span class="wfc-dot${i === weatherIdx ? ' active' : ''}"></span>`
+        ).join('');
+    } else {
+        dots.innerHTML = '';
+    }
+}
+
+async function loadWeatherForCity(city) {
+    const el = document.getElementById("js-weather-value");
+    try {
+        const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const d = await res.json();
+        weatherCache[city] = d;
+        if (weatherCities[weatherIdx] === city) renderWeatherData(d);
+    } catch(e) {
+        if (weatherCities[weatherIdx] === city) {
+            el.className = 'wfc-error';
+            el.innerHTML = `Weather unavailable — <a href="https://wttr.in/${encodeURIComponent(city)}" target="_blank" rel="noopener">check wttr.in</a>`;
+        }
+    }
+}
+
+function renderWeatherData(d) {
+    const el = document.getElementById("js-weather-value");
+    const c = d.current_condition[0];
+    const days = d.weather.slice(0, 3);
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const forecastHTML = days.map(day => {
+        const dt   = new Date(day.date + 'T12:00:00Z');
+        const code = day.hourly[4]?.weatherCode ?? day.hourly[0]?.weatherCode ?? 113;
+        return `<div class="wfc-day">
+            <span class="wfc-dayname">${dayNames[dt.getUTCDay()]}</span>
+            <span class="wfc-day-icon">${wmoGet(code, 0)}</span>
+            <span class="wfc-day-desc">${wmoGet(code, 1)}</span>
+            <span class="wfc-range">${day.mintempC}° / ${day.maxtempC}°</span>
+        </div>`;
+    }).join('');
+    el.className = 'wfc';
+    el.innerHTML = `
+        <div class="wfc-current">
+            <span class="wfc-curr-icon">${wmoGet(c.weatherCode, 0)}</span>
+            <div class="wfc-curr-info">
+                <span class="wfc-curr-temp">${c.temp_C}°C</span>
+                <span class="wfc-curr-desc">${wmoGet(c.weatherCode, 1)}</span>
+                <span class="wfc-curr-meta">Feels ${c.FeelsLikeC}°C &bull; 💧${c.humidity}% &bull; 💨${c.windspeedKmph} km/h</span>
+            </div>
+        </div>
+        <div class="wfc-divider"></div>
+        <div class="wfc-forecast">${forecastHTML}</div>`;
+}
+
+async function weatherNav(dir) {
+    weatherIdx = (weatherIdx + dir + weatherCities.length) % weatherCities.length;
+    updateWeatherNav();
+    const city = weatherCities[weatherIdx];
+    if (weatherCache[city]) {
+        renderWeatherData(weatherCache[city]);
+    } else {
+        const el = document.getElementById("js-weather-value");
+        el.className = 'wfc-loading';
+        el.textContent = 'Loading…';
+        await loadWeatherForCity(city);
+    }
+}
+
+async function initWeather() {
+    refreshWeatherCities();
+    weatherIdx = 0;
+    updateWeatherNav();
+    await loadWeatherForCity(weatherCities[0]);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CARDS
+// ═══════════════════════════════════════════════════════════
+function renderCards() {
+    const props = allProperties();
+    const n = props.length;
+    document.getElementById("js-toolbar-count").textContent =
+        `${n} propert${n === 1 ? "y" : "ies"} · check boxes to compare`;
+    document.getElementById("js-cards-grid").innerHTML = props.map(cardHTML).join("");
+}
+
+function cardHTML(p) {
+    const voteCount = votes[p.id] || 0;
+    const sofa      = p.sofaBeds ? ` + ${p.sofaBeds} sofa` : "";
+    const badges    = (p.amenities || []).map(badgeHTML).join("");
+    const notes     = p.notes ? `<div class="card__notes">${esc(p.notes)}</div>` : "";
+    const warning   = p.warning ? `<div class="card__warning">⚠️ ${esc(p.warning)}</div>` : "";
+    const ratingCls = p.rating >= 9 ? "card__rating--high"
+                    : p.rating >= 7 ? "card__rating--mid"
+                    : "card__rating--low";
+    const perPerson = p.pricePerPerson
+        ? `<span class="card__price-pp">≈ €${p.pricePerPerson}/person</span>` : "";
+    const sizeBadge = p.size ? `<span class="card__stat">📐 ${p.size}</span>` : "";
+    const voteBadge = voteCount > 0 ? `<span class="card__vote-count">${voteCount}</span>` : "";
+
+    return `
+<article class="card" data-id="${p.id}">
+    <div class="card__img-wrap">
+        <img class="card__img" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy"
+             onerror="this.style.opacity='0'">
+        <button class="card__fav ${voteCount > 0 ? "has-votes" : ""}" onclick="castVote(${p.id})"
+                aria-label="Vote" title="${voteCount}/${TRIP.group} votes — click to add yours">
+            ${voteCount > 0 ? "❤️" : "🤍"}${voteBadge}
+        </button>
+        <label class="card__compare-wrap" title="Add to compare">
+            <input type="checkbox" onchange="toggleCompare(${p.id}, this.checked)"
+                   aria-label="Compare ${esc(p.name)}">
+        </label>
+        ${p.rating ? `<div class="card__rating ${ratingCls}">${p.rating.toFixed(1)} <span class="card__rating-count">· ${p.reviewCount}</span></div>` : ""}
+    </div>
+    <div class="card__body">
+        <h2 class="card__title">
+            <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.name)}</a>
+        </h2>
+        <div class="card__stats">
+            <span class="card__stat">🛏 ${p.bedrooms} bed${p.bedrooms !== 1 ? "s" : ""}${sofa}</span>
+            <span class="card__stat">👥 sleeps ${p.maxSleeps}</span>
+            <span class="card__stat">🏖 ${p.beachDistance}</span>
+            ${sizeBadge}
+        </div>
+        <div class="card__price-row">
+            <span class="card__price">€${p.price.toLocaleString()}</span>
+            <span class="card__price-label">${esc(p.priceLabel)}</span>
+        </div>
+        ${perPerson}
+        ${warning}
+        <div class="card__amenities">${badges}</div>
+        ${notes}
+        <button class="card__remove-btn" onclick="removeProperty(${p.id})">× Remove</button>
+    </div>
+</article>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// VOTES
+// ═══════════════════════════════════════════════════════════
+function castVote(id) {
+    const current = votes[id] || 0;
+    votes[id] = current >= TRIP.group ? 0 : current + 1;
+    localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
+    // patch button in place without full re-render
+    const card = document.querySelector(`.card[data-id="${id}"]`);
+    if (!card) return;
+    const btn   = card.querySelector(".card__fav");
+    const count = votes[id];
+    btn.className = `card__fav${count > 0 ? " has-votes" : ""}`;
+    btn.title     = `${count}/${TRIP.group} votes — click to add yours`;
+    btn.innerHTML = count > 0
+        ? `❤️<span class="card__vote-count">${count}</span>`
+        : "🤍";
+}
+
+// ═══════════════════════════════════════════════════════════
+// COMPARE
+// ═══════════════════════════════════════════════════════════
+function toggleCompare(id, checked) {
+    if (checked) {
+        if (compareSet.size >= 3) {
+            const card = document.querySelector(`.card[data-id="${id}"]`);
+            card.querySelector("input[type=checkbox]").checked = false;
+            alert("You can compare up to 3 properties at a time.");
+            return;
+        }
+        compareSet.add(id);
+    } else {
+        compareSet.delete(id);
+    }
+    const trigger = document.getElementById("js-compare-trigger");
+    document.getElementById("js-compare-count").textContent = compareSet.size;
+    trigger.classList.toggle("is-visible", compareSet.size >= 2);
+}
+
+function openCompare() {
+    const props = allProperties().filter(p => compareSet.has(p.id));
+    renderCompareTable(props);
+    document.getElementById("js-compare-overlay").classList.add("is-open");
+    document.body.style.overflow = "hidden";
+}
+
+function closeCompare() {
+    document.getElementById("js-compare-overlay").classList.remove("is-open");
+    document.body.style.overflow = "";
+}
+
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById("js-compare-overlay")) closeCompare();
+}
+
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") { closeCompare(); closeAddModal(); }
+});
+
+function renderCompareTable(props) {
+    const rows = [
+        { key: "img",       label: "Photo"       },
+        { key: "name",      label: "Property"    },
+        { key: "rating",    label: "Rating"      },
+        { key: "price",     label: "Total price" },
+        { key: "pp",        label: "Per person"  },
+        { key: "beach",     label: "Beach"       },
+        { key: "beds",      label: "Bedrooms"    },
+        { key: "sleeps",    label: "Sleeps"      },
+        { key: "size",      label: "Size"        },
+        { key: "amenities", label: "Amenities"   },
+        { key: "notes",     label: "Notes"       },
+    ];
+
+    let html = `<table class="compare-table"><tbody>`;
+    for (const row of rows) {
+        html += `<tr><th>${row.label}</th>`;
+        for (const p of props) {
+            html += `<td>`;
+            switch (row.key) {
+                case "img":
+                    html += `<img class="compare__img" src="${esc(p.image)}" alt="${esc(p.name)}">`;
+                    break;
+                case "name":
+                    html += `<div class="compare__name"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.name)}</a></div>`;
+                    break;
+                case "rating":
+                    if (p.rating) {
+                        const cls = p.rating >= 9 ? "color:#065F46;background:#D1FAE5"
+                                  : p.rating >= 7 ? "color:#92400E;background:#FEF3C7"
+                                  : "color:#991B1B;background:#FEE2E2";
+                        html += `<span style="font-weight:700;font-size:1rem;padding:2px 8px;border-radius:6px;${cls}">${p.rating.toFixed(1)}</span> <span style="color:var(--muted);font-size:0.8rem">${p.reviewCount} reviews</span>`;
+                    } else { html += "—"; }
+                    break;
+                case "price":
+                    html += `<strong style="font-size:1.05rem;color:var(--blue)">€${p.price.toLocaleString()}</strong><br><span style="color:var(--muted);font-size:0.78rem">${esc(p.priceLabel)}</span>`;
+                    break;
+                case "pp":
+                    html += p.pricePerPerson ? `<strong>€${p.pricePerPerson}</strong> <span style="color:var(--muted);font-size:0.8rem">/ person</span>` : "—";
+                    break;
+                case "beach":
+                    html += `🏖 ${esc(p.beachDistance)}`;
+                    break;
+                case "beds":
+                    html += `${p.bedrooms} bed${p.bedrooms !== 1 ? "s" : ""}${p.sofaBeds ? ` + ${p.sofaBeds} sofa` : ""}`;
+                    break;
+                case "sleeps":
+                    html += `👥 ${p.maxSleeps}${p.maxSleeps < 5 ? " <span style='color:#B91C1C;font-size:0.8rem;font-weight:600'>⚠️ &lt;5</span>" : ""}`;
+                    break;
+                case "size":
+                    html += p.size || "—";
+                    break;
+                case "amenities":
+                    html += `<div style="display:flex;flex-wrap:wrap;gap:4px">${(p.amenities||[]).map(badgeHTML).join("")}</div>`;
+                    break;
+                case "notes":
+                    html += p.notes ? `<em style="color:var(--muted);font-size:0.82rem;line-height:1.5">${esc(p.notes)}</em>` : `<span style="color:var(--muted)">—</span>`;
+                    break;
+            }
+            html += `</td>`;
+        }
+        html += `</tr>`;
+    }
+    html += `</tbody></table>`;
+    document.getElementById("js-compare-body").innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// REMOVE PROPERTY
+// ═══════════════════════════════════════════════════════════
+function removeProperty(id) {
+    if (!confirm("Remove this property from the list?")) return;
+    removedIds.add(id);
+    localStorage.setItem(REMOVED_KEY, JSON.stringify([...removedIds]));
+    compareSet.delete(id);
+    document.getElementById("js-compare-count").textContent = compareSet.size;
+    document.getElementById("js-compare-trigger").classList.toggle("is-visible", compareSet.size >= 2);
+    renderCards();
+    refreshWeatherCities();
+    updateWeatherNav();
+}
+
+// ═══════════════════════════════════════════════════════════
+// ADD PROPERTY MODAL
+// ═══════════════════════════════════════════════════════════
+function openAddModal() {
+    document.getElementById("js-add-overlay").classList.add("is-open");
+    document.body.style.overflow = "hidden";
+}
+
+function closeAddModal() {
+    document.getElementById("js-add-overlay").classList.remove("is-open");
+    document.body.style.overflow = "";
+}
+
+function handleAddOverlayClick(e) {
+    if (e.target === document.getElementById("js-add-overlay")) closeAddModal();
+}
+
+function parseListingText(text) {
+    const t = text;
+    const tl = t.toLowerCase();
+    const out = {};
+
+    // Name: first substantial line that isn't a URL or generic word
+    const skip = /^(https?:|hotels?|apartments?|greece|macedonia|all|we price|genius|scored|rated|showing|from|good|great|excellent|superb|see availability|most popular)/i;
+    const nameLine = t.split(/\n/).map(l => l.trim()).find(l =>
+        l.length > 6 && l.length < 90 && !skip.test(l) && !/^\d/.test(l) && !l.includes('booking.com')
+    );
+    if (nameLine) out.name = nameLine.replace(/\s*\(.*?\)\s*/g, '').trim();
+
+    // Rating: "Scored 9.2" or standalone like "9.2\n"
+    const ratingM = t.match(/[Ss]cored?\s+(\d+\.?\d*)|[Rr]ated?\s+(\d+\.?\d*)|\b([89]\.\d|10\.0)\b/);
+    if (ratingM) out.rating = parseFloat(ratingM[1] || ratingM[2] || ratingM[3]);
+
+    // Review count
+    const reviewM = t.match(/(\d+)\s+reviews?/i);
+    if (reviewM) out.reviewCount = parseInt(reviewM[1]);
+
+    // Price: first €X,XXX or €X.XXX pattern
+    const priceM = t.match(/€\s*([\d][0-9,. ]+)/);
+    if (priceM) out.price = parseInt(priceM[1].replace(/[,. ]/g, '').slice(0, 6));
+
+    // Beach distance: "X m" or "X km" near "beach" keyword
+    const beachM =
+        t.match(/(?:beach(?:front)?|to (?:the )?beach)[^.]{0,40}?(\d+(?:\.\d+)?)\s*(m|km)\b/i) ||
+        t.match(/(\d+(?:\.\d+)?)\s*(m|km)\s*(?:to |from )?(?:the )?beach/i) ||
+        t.match(/Beaches? in the neighbourhood\s*\S[^\n]*\n[^\n]*\n(\d+(?:\.\d+)?)\s*(m|km)/i);
+    if (beachM) {
+        const dist = beachM[1], unit = (beachM[2] || 'm').toLowerCase();
+        out.beachDistance = `${dist} ${unit}`;
+    }
+
+    // Bedrooms / sofa beds / sleeps
+    const bedsM = t.match(/(\d+)\s*bedroom/i);
+    if (bedsM) out.bedrooms = parseInt(bedsM[1]);
+    const sofaM = t.match(/(\d+)?\s*sofa[\s-]?bed/i);
+    if (sofaM) out.sofaBeds = sofaM[1] ? parseInt(sofaM[1]) : 1;
+    const sleepsM = t.match(/[Ss]leeps?\s+(\d+)|(\d+)\s+guests?/i);
+    if (sleepsM) out.maxSleeps = parseInt(sleepsM[1] || sleepsM[2]);
+
+    // Size
+    const sizeM = t.match(/(\d+)\s*m[²2]/i);
+    if (sizeM) out.size = `${sizeM[1]} m²`;
+
+    // Full address line — Booking.com embeds the property address (contains Greek postal code 6XXXX)
+    for (const line of t.split(/\n/)) {
+        if (/6[0-9]\s?[0-9]{3}/.test(line) && line.length < 200) {
+            out.address = line.replace(/After\s+booking.*/i, '').replace(/–Show map.*/i, '').trim();
+            break;
+        }
+    }
+
+    // Location — known Kassandra towns
+    const towns = [
+        ['Kriopigi','Kriopighi'],['Nea Skioni'],['Nea Fokea'],
+        ['Possidi','Posidi'],['Pefkochori','Pefkohori'],
+        ['Hanioti'],['Kassandreia','Kassandria'],['Siviri'],['Fourka'],
+        ['Nea Potidaia'],['Polychrono'],['Kallithea'],['Sani'],
+    ];
+    for (const variants of towns) {
+        if (variants.some(v => tl.includes(v.toLowerCase()))) {
+            out.location = variants[0];
+            break;
+        }
+    }
+
+    // Amenities
+    const amenityKeywords = {
+        'ac':       ['air condition','a/c','air-condition'],
+        'pool':     ['pool','swimming'],
+        'parking':  ['parking','car park'],
+        'sea view': ['sea view','ocean view','seaview'],
+        'balcony':  ['balcony'],
+        'kitchen':  ['kitchen','kitchenette'],
+        'wifi':     ['wi-fi','wifi','wireless internet','free wifi'],
+        'bbq':      ['bbq','barbecue','barbeque'],
+        'terrace':  ['terrace','sun terrace'],
+    };
+    out.amenities = Object.entries(amenityKeywords)
+        .filter(([, pats]) => pats.some(p => tl.includes(p)))
+        .map(([k]) => k);
+
+    return out;
+}
+
+async function geocodeAddress(query) {
+    const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=gr`,
+        { headers: { 'Accept': 'application/json' } }
+    );
+    if (!res.ok) throw new Error('Nominatim ' + res.status);
+    const data = await res.json();
+    return data.length ? [parseFloat(data[0].lat), parseFloat(data[0].lon)] : null;
+}
+
+async function submitAddProperty(e) {
+    e.preventDefault();
+    const url   = document.getElementById("pf-url").value.trim();
+    const image = document.getElementById("pf-image").value.trim();
+    const raw   = document.getElementById("pf-raw").value;
+    const btn   = e.target.querySelector('[type="submit"]');
+
+    const p = parseListingText(raw);
+
+    if (!p.name) {
+        const slug = url.split('/').pop().replace(/\.html.*/, '').replace(/-/g, ' ')
+                       .replace(/\b\w/g, c => c.toUpperCase());
+        p.name = slug || "New Property";
+    }
+
+    // Geocode: prefer full extracted address, fall back to town name
+    let coords = null;
+    const geoQuery = p.address || (p.location ? `${p.location}, Kassandra, Halkidiki, Greece` : null);
+    if (geoQuery) {
+        btn.textContent = 'Locating…';
+        btn.disabled = true;
+        try {
+            coords = await geocodeAddress(geoQuery);
+            // If full address gave no result, retry with just the town
+            if (!coords && p.address && p.location) {
+                coords = await geocodeAddress(`${p.location}, Kassandra, Halkidiki, Greece`);
+            }
+        } catch(err) {
+            console.warn('Geocoding failed:', err);
+        }
+        btn.textContent = 'Extract & Add →';
+        btn.disabled = false;
+    }
+
+    const price = p.price || 0;
+    const newProp = {
+        id:            Date.now(),
+        name:          p.name,
+        url,
+        image,
+        price,
+        priceLabel:    `total (${TRIP.dates.start.slice(0,4)})`,
+        pricePerPerson: TRIP.group ? Math.round(price / TRIP.group) : 0,
+        beachDistance: p.beachDistance || "—",
+        location:      p.location || "",
+        bedrooms:      p.bedrooms  || 0,
+        sofaBeds:      p.sofaBeds  || 0,
+        maxSleeps:     p.maxSleeps || 0,
+        size:          p.size      || "",
+        rating:        p.rating    || 0,
+        reviewCount:   p.reviewCount || 0,
+        coords,
+        amenities:     p.amenities || [],
+        notes:         "",
+    };
+
+    customProperties.push(newProp);
+    localStorage.setItem(CUSTOM_KEY, JSON.stringify(customProperties));
+    document.getElementById("js-add-form").reset();
+    closeAddModal();
+    renderCards();
+    refreshWeatherCities();
+    updateWeatherNav();
+
+    if (window._leafletMap && coords) {
+        const sofa = newProp.sofaBeds ? ` + ${newProp.sofaBeds} sofa` : "";
+        L.marker(coords).addTo(window._leafletMap).bindPopup(`
+            <strong style="font-size:0.95rem;display:block;margin-bottom:4px">${esc(newProp.name)}</strong>
+            <span style="color:#71717A;font-size:0.8rem">🏖 ${esc(newProp.beachDistance)} &nbsp;·&nbsp; 🛏 ${newProp.bedrooms} beds${sofa}</span><br>
+            <strong style="color:#1B4F72">€${newProp.price.toLocaleString()}</strong><br>
+            <a href="${esc(newProp.url)}" target="_blank" rel="noopener" style="font-size:0.82rem;color:#2E86AB;text-decoration:none">View listing →</a>
+        `, { minWidth: 200 });
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAP (Leaflet + OpenStreetMap)
+// ═══════════════════════════════════════════════════════════
+function initMap() {
+    const map = L.map("map", { scrollWheelZoom: false })
+        .setView(TRIP.map.center, TRIP.map.zoom);
+    window._leafletMap = map;
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+    }).addTo(map);
+
+    allProperties().filter(p => p.coords).forEach(p => {
+        const sofa = p.sofaBeds ? ` + ${p.sofaBeds} sofa` : "";
+        L.marker(p.coords)
+            .addTo(map)
+            .bindPopup(`
+                <strong style="font-size:0.95rem;display:block;margin-bottom:4px">${esc(p.name)}</strong>
+                <span style="color:#71717A;font-size:0.8rem">
+                    🏖 ${esc(p.beachDistance)} &nbsp;·&nbsp;
+                    🛏 ${p.bedrooms} beds${sofa} &nbsp;·&nbsp;
+                    👥 ${p.maxSleeps}
+                </span><br>
+                <strong style="color:#1B4F72">€${p.price.toLocaleString()}</strong>
+                <span style="color:#A1A1AA;font-size:0.78rem"> ${esc(p.priceLabel)}</span><br>
+                <a href="${esc(p.url)}" target="_blank" rel="noopener"
+                   style="font-size:0.82rem;color:#2E86AB;text-decoration:none">
+                    View listing →
+                </a>
+            `, { minWidth: 200 });
+    });
+
+    // Force tile repaint after layout settles
+    setTimeout(() => map.invalidateSize(), 200);
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════
+document.addEventListener("DOMContentLoaded", () => {
+    initHero();
+    tick();
+    setInterval(tick, 1000);
+    initWeather();
+    renderCards();
+    try {
+        initMap();
+    } catch (e) {
+        console.warn("Map init failed:", e);
+        document.getElementById("map").innerHTML =
+            `<div style="display:flex;align-items:center;justify-content:center;
+                height:100%;background:#F7F5F0;border-radius:18px;color:#71717A;font-size:0.9rem">
+                Map requires an internet connection to load tiles.
+            </div>`;
+    }
+});
+</script>
+</body>
+</html>
