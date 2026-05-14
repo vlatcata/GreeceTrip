@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <style>
         /* ─── Reset & Tokens ─────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1096,13 +1098,28 @@ const PROPERTIES = [
 ];
 
 // ═══════════════════════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════════════════════
+firebase.initializeApp({
+    apiKey:            "AIzaSyCMK-S7eMl3bwJr4T4b77lnjqHTDbJTbJY",
+    authDomain:        "greecetrip-ee6e6.firebaseapp.com",
+    databaseURL:       "https://greecetrip-ee6e6-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:         "greecetrip-ee6e6",
+    storageBucket:     "greecetrip-ee6e6.firebasestorage.app",
+    messagingSenderId: "613882615409",
+    appId:             "1:613882615409:web:08e8f40c057febe3872dd0",
+});
+const votesRef = firebase.database().ref("votes");
+
+// ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
-const VOTES_KEY   = "trip26-votes";
-const CUSTOM_KEY  = "trip26-custom";
-const REMOVED_KEY = "trip26-removed";
+const CUSTOM_KEY    = "trip26-custom";
+const REMOVED_KEY   = "trip26-removed";
+const MY_VOTES_KEY  = "trip26-my-votes";
 
-let votes            =          JSON.parse(localStorage.getItem(VOTES_KEY)   || "{}");
+let votes            = {};
+let myVotes          = new Set(JSON.parse(localStorage.getItem(MY_VOTES_KEY) || "[]"));
 let customProperties =          JSON.parse(localStorage.getItem(CUSTOM_KEY)  || "[]");
 let removedIds       = new Set(JSON.parse(localStorage.getItem(REMOVED_KEY) || "[]"));
 let compareSet       = new Set();
@@ -1361,19 +1378,35 @@ function cardHTML(p) {
 // VOTES
 // ═══════════════════════════════════════════════════════════
 function castVote(id) {
-    const current = votes[id] || 0;
-    votes[id] = current >= TRIP.group ? 0 : current + 1;
-    localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
-    // patch button in place without full re-render
-    const card = document.querySelector(`.card[data-id="${id}"]`);
-    if (!card) return;
-    const btn   = card.querySelector(".card__fav");
-    const count = votes[id];
-    btn.className = `card__fav${count > 0 ? " has-votes" : ""}`;
-    btn.title     = `${count}/${TRIP.group} votes — click to add yours`;
-    btn.innerHTML = count > 0
-        ? `❤️<span class="card__vote-count">${count}</span>`
-        : "🤍";
+    const alreadyVoted = myVotes.has(id);
+    const current      = votes[id] || 0;
+    const newCount     = alreadyVoted ? Math.max(0, current - 1) : current + 1;
+
+    if (alreadyVoted) {
+        myVotes.delete(id);
+    } else {
+        myVotes.add(id);
+    }
+    localStorage.setItem(MY_VOTES_KEY, JSON.stringify([...myVotes]));
+    votesRef.child(String(id)).set(newCount);
+}
+
+function patchVoteButtons() {
+    allProperties().forEach(p => {
+        const card = document.querySelector(`.card[data-id="${p.id}"]`);
+        if (!card) return;
+        const btn      = card.querySelector(".card__fav");
+        if (!btn) return;
+        const count    = votes[p.id] || 0;
+        const isMine   = myVotes.has(p.id);
+        btn.className  = `card__fav${count > 0 ? " has-votes" : ""}`;
+        btn.title      = isMine
+            ? `${count}/${TRIP.group} votes — click to remove yours`
+            : `${count}/${TRIP.group} votes — click to add yours`;
+        btn.innerHTML  = isMine
+            ? `❤️${count > 0 ? `<span class="card__vote-count">${count}</span>` : ""}`
+            : `🤍${count > 0 ? `<span class="card__vote-count">${count}</span>` : ""}`;
+    });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1734,6 +1767,12 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(tick, 1000);
     initWeather();
     renderCards();
+
+    // Firebase real-time votes — fires immediately on load then on every change
+    votesRef.on("value", snapshot => {
+        votes = snapshot.val() || {};
+        patchVoteButtons();
+    });
     try {
         initMap();
     } catch (e) {
